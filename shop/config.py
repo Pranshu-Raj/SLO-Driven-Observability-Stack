@@ -25,7 +25,7 @@ class Settings:
     work_ms: int = 200
 
     @classmethod
-    def from_env(cls, service: str, env: Mapping[str, str] = os.environ) -> "Settings":
+    def from_env(cls, service: str, env: Mapping[str, str] = os.environ) -> Settings:
         missing = [name for name in REQUIRED[service] if not env.get(name)]
         if missing:
             raise ConfigError(f"missing required settings: {', '.join(missing)}")
@@ -40,7 +40,7 @@ class Settings:
         )
 
 
-def _number(env, name, default, kind):
+def _number[T: (int, float)](env: Mapping[str, str], name: str, default: T, kind: type[T]) -> T:
     raw = env.get(name)
     if not raw:
         return default
