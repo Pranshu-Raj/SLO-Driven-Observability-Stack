@@ -1,3 +1,17 @@
 /DECISIONS.md
 /LEARNING_LOG.md
 /ROADMAP.md
+
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+.env
+kubeconfig*
