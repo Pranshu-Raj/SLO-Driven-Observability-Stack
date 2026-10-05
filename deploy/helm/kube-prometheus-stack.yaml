@@ -1,0 +1,112 @@
+fullnameOverride: kps
+
+# k3s runs these inside its own binary, there is nothing separate to scrape
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    scrapeInterval: 30s
+    # a 30d SLO window has to fit; retentionSize is the real cap on this disk
+    retention: 30d
+    retentionSize: 8GB
+    enableRemoteWriteReceiver: true
+    enableFeatures:
+      - exemplar-storage
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1Gi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 10Gi
+
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 48Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 1Gi
+
+grafana:
+  admin:
+    existingSecret: grafana-admin
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 384Mi
+  sidecar:
+    dashboards:
+      searchNamespace: ALL
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      uid: loki
+      url: http://loki.observability.svc:3100
+    - name: Tempo
+      type: tempo
+      uid: tempo
+      url: http://tempo.observability.svc:3200
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: loki
+        serviceMap:
+          datasourceUid: prometheus
+
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 24Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 48Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 192Mi

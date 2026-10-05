@@ -1,0 +1,13 @@
+tempo:
+  retention: 72h
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+persistence:
+  enabled: true
+  size: 10Gi
