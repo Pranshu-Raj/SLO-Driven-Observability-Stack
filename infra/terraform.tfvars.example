@@ -1,0 +1,4 @@
+region           = "ap-mumbai-1"
+tenancy_ocid     = "ocid1.tenancy.oc1..xxxx"
+compartment_ocid = "ocid1.compartment.oc1..xxxx"
+admin_cidr       = "203.0.113.10/32"

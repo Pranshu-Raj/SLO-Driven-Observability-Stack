@@ -1,0 +1,22 @@
+#cloud-config
+package_update: true
+packages:
+  - curl
+  - jq
+
+write_files:
+  - path: /etc/rancher/k3s/config.yaml
+    content: |
+      write-kubeconfig-mode: "0600"
+      kubelet-arg:
+        - system-reserved=cpu=250m,memory=768Mi
+        - kube-reserved=cpu=250m,memory=512Mi
+        - eviction-hard=memory.available<300Mi,nodefs.available<10%
+
+runcmd:
+  # Oracle's Ubuntu image ships iptables rules that REJECT everything except ssh.
+  # The VCN security list already filters ingress, so drop those and let k3s own the chains.
+  - sed -i '/-A INPUT -j REJECT/d; /-A FORWARD -j REJECT/d' /etc/iptables/rules.v4
+  - netfilter-persistent reload
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION='${k3s_version}' sh -
+  - curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
