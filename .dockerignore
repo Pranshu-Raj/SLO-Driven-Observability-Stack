@@ -1,0 +1,6 @@
+*
+!pyproject.toml
+!uv.lock
+!.python-version
+!shop/
+**/__pycache__

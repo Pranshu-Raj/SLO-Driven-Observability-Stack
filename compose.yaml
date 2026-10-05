@@ -1,0 +1,32 @@
+x-shop: &shop
+  build: .
+  image: shop:dev
+  restart: unless-stopped
+  environment:
+    APP_ENV: local
+    REDIS_URL: redis://redis:6379/0
+    API_URL: http://api:8000
+    WORK_MS: ${WORK_MS:-200}
+  depends_on:
+    - redis
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+
+  api:
+    <<: *shop
+    command: api
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  worker:
+    <<: *shop
+    command: worker
+
+  frontend:
+    <<: *shop
+    command: frontend
+    ports:
+      - "127.0.0.1:8080:8000"
