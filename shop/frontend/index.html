@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bean Counter</title>
+  <style>
+    body { font: 15px/1.5 ui-monospace, Menlo, Consolas, monospace; max-width: 34rem; margin: 3rem auto; padding: 0 1rem; color: #222; background: #fbf8f3; }
+    h1 { font-size: 1.1rem; letter-spacing: .05em; border-bottom: 2px dashed #b9a88f; padding-bottom: .5rem; }
+    li { display: flex; justify-content: space-between; align-items: center; padding: .4rem 0; }
+    button { font: inherit; border: 1px solid #6b4f2a; background: none; padding: .1rem .6rem; cursor: pointer; }
+    button:hover { background: #6b4f2a; color: #fbf8f3; }
+    #status { margin-top: 1.5rem; min-height: 1.5em; color: #6b4f2a; }
+    .err { color: #a3261b !important; }
+    ul { list-style: none; padding: 0; }
+  </style>
+</head>
+<body>
+  <h1>BEAN COUNTER</h1>
+  <ul id="products"><li>loading...</li></ul>
+  <p id="status"></p>
+
+  <script>
+    const list = document.getElementById("products");
+    const status = document.getElementById("status");
+
+    function say(text, isError) {
+      status.textContent = text;
+      status.className = isError ? "err" : "";
+    }
+
+    async function order(productId) {
+      say("placing order...");
+      const res = await fetch("/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ product_id: productId, quantity: 1 }),
+      });
+      const body = await res.json();
+      if (!res.ok) return say(`order failed (${res.status}): ${body.detail}`, true);
+      poll(body.id, 0);
+    }
+
+    async function poll(id, attempt) {
+      const res = await fetch(`/orders/${id}`);
+      const body = await res.json();
+      if (res.ok && body.status === "fulfilled") return say(`order ${id} fulfilled`);
+      if (attempt > 20) return say(`order ${id} still ${body.status || "unknown"}, giving up`, true);
+      say(`order ${id} ${body.status || "pending"}...`);
+      setTimeout(() => poll(id, attempt + 1), 500);
+    }
+
+    fetch("/products")
+      .then((res) => res.ok ? res.json() : Promise.reject(res.status))
+      .then((products) => {
+        list.replaceChildren(...products.map((p) => {
+          const li = document.createElement("li");
+          const label = document.createElement("span");
+          label.textContent = `${p.name}  $${(p.price_cents / 100).toFixed(2)}`;
+          const btn = document.createElement("button");
+          btn.textContent = "order";
+          btn.onclick = () => order(p.id);
+          li.append(label, btn);
+          return li;
+        }));
+      })
+      .catch((code) => {
+        list.replaceChildren();
+        say(`could not load products (${code})`, true);
+      });
+  </script>
+</body>
+</html>
